@@ -27,8 +27,7 @@ function onRequest(request, response, modules) {
                         var resultArr = resultObject[results];
                         for(var line in resultArr){
                             str = str + resultArr[line].name +  
-                            '\n价格：￥' + resultArr[line].price + 
-                            '\n评分：' + resultArr[line].score +
+                            '\n价格：￥' + resultArr[line].price 
                             '\n\n';
                         }
                     }
@@ -49,7 +48,7 @@ function onRequest(request, response, modules) {
            }//end of if(menu)
 
            //如果接受的消息是“今天吃什么”，就推荐菜名并返回。
-            else if(request.body.xml.Content == '今天吃什么'){
+            else if(request.body.xml.Content == '吃什么'){
                
                var bql = modules.oBql;
                var str = '\t\t今日推荐\n';
@@ -61,7 +60,6 @@ function onRequest(request, response, modules) {
                     for(var results in resultObject){
                             str = str + resultObject[results][0].name +  
                             '\n价格：￥' + resultObject[results][0].price + 
-                            '\n评分：' + resultObject[results][0].score +
                             '\n\n';
                     }
               },bql.exec({  //select second course
@@ -71,7 +69,6 @@ function onRequest(request, response, modules) {
                     for(var results in resultObject){
                             str = str + resultObject[results][0].name +  
                             '\n价格：￥' + resultObject[results][0].price + 
-                            '\n评分：' + resultObject[results][0].score +
                             '\n\n';
                     }
                     str = str + '如果有不喜欢的菜，请给我们菜名反馈，我们将为你再次进行推荐！';
@@ -102,27 +99,37 @@ function onRequest(request, response, modules) {
                var bql = modules.oBql;
                var str = '';
                var updId = '';
-               var type = '';
                
                bql.exec({
-                    "bql": "select objectId from course where name = '" + coursename + "' "
+                "bql": "select objectId from course where name = '" + coursename + "' "
                 },function(err,data){
                     var message = JSON.parse(data);
                     for(var course in message){
                         updId = updId + message[course][0].objectId;
-                        type = type + message[course][0].type;
                     }
-                    //降低评分
                     db.update({
                         "table": "course",
                         "objectId": updId,
                         "data": {"score": 50}
                     },function(err,data){
-                        str = str + '已给这道菜差评！';
+                    str = str + '请输入 “吃什么” ， 再次获得推荐 。';
+                    var result = {
+                        xml: {
+                            ToUserName: request.body.xml.FromUserName,
+                            FromUserName: request.body.xml.ToUserName,
+                            CreateTime: new Date().getTime(),
+                            MsgType: 'text',
+                            Content: str
+                        }
+                    }
+                    var builder = new xml2js.Builder();
+                    var xml = builder.buildObject(result);
+                    response.set('ContentType','text/xml');
+                    response.send(xml);
                     });
-                  //推送另一道菜
-              
-          }//end of bad comments
+                });
+                  
+          }//end of else
 
     }//end of httptype is post
-}           
+}                                                                                    
